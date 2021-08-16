@@ -299,11 +299,15 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
                     String errorMessage = "";
                     try {
                         DataOutputStream outstream = new DataOutputStream(sock.getOutputStream());
-                        outstream.write('B');
+                        outstream.write(intToByteArray(2));
                         MainActivity.printClientLog("1");
-                        byte[] len = intToByteArray(screenHeight + screenWidth + data.length);
-                        MainActivity.printClientLog("2" + len);
+                        byte[] len = intToByteArray(data.length);
+                        byte[] width = intToByteArray(screenWidth);
+                        byte[] heigth = intToByteArray(screenHeight);
+                        MainActivity.printClientLog("2");
                         outstream.write(len);
+                        outstream.write(width);
+                        outstream.write(heigth);
                         MainActivity.printClientLog("3");
                         outstream.write(data);
                         MainActivity.printClientLog("4");
