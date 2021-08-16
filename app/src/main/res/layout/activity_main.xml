@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="10dp"
+    android:id="@+id/linearayout">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/button"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <ToggleButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/screenshotDisplay"
+            android:textOff="@string/start_screenshot_display"
+            android:textOn="@string/stop_screenshot_display"/>
+
+        <ToggleButton
+            android:id="@+id/serverconnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textOff="@string/connected"
+            android:textOn="@string/unconnected"/>
+        <ToggleButton
+            android:id="@+id/camera"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textOff="start_camera_display"
+            android:textOn="stop_camera_display"/>
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="532dp"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+</LinearLayout>
