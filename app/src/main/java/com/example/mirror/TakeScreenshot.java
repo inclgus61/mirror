@@ -38,8 +38,8 @@ import java.util.concurrent.locks.Lock;
 
 public class TakeScreenshot extends Service implements ImageReader.OnImageAvailableListener  {
 
-    private String defaultip = "172.30.1.45";
-    //private String defaultip = "192.168.0.2";
+    //private String defaultip = "172.30.1.45";
+    private String defaultip = "192.168.0.15";
     private int defaultport = 50006;
     private Activity activity;
     private MediaProjectionManager mMediaProjectionManager;
@@ -195,6 +195,7 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
                         MainActivity.printClientLog("onsending error");
                     }
                     image.close();
+                    mImageReader.getSurface().release();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -283,10 +284,8 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
     }
 
     public String getPrintStackTrace(Exception e) {
-
         StringWriter errors = new StringWriter();
         e.printStackTrace(new PrintWriter(errors));
-
         return errors.toString();
     }
 
