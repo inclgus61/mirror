@@ -204,16 +204,6 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
     }
 
     public void clean(){
-        /*
-        if (mMediaProjectionManager != null) {
-            mMediaProjectionManager = null;
-        }
-        if (mMediaProjection != null) {
-            mMediaProjection.stop();
-        }
-        if (bitmap != null) {
-            bitmap = null;
-        }*/
         if (mImageReader != null) {
             mImageReader.discardFreeBuffers();
             mImageReader.close();
