@@ -10,7 +10,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.media.Image;
@@ -34,10 +33,8 @@ import java.net.Socket;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.concurrent.locks.Lock;
 
 public class TakeScreenshot extends Service implements ImageReader.OnImageAvailableListener  {
-    //private String defaultip = "172.30.1.3";
     private String defaultip = "192.168.0.18";
     private int defaultport = 50000;
     private Activity activity;
@@ -56,6 +53,7 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
     private boolean getSizeok = false;
     private boolean imagesend = false;
     private Handler mHandler;
+    private Image image;
     static int count;
 
     public static final int REQUEST_CODE_CAPTURE_IMAGE = 789;
@@ -100,7 +98,6 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
 
     @Override
     public void onDestroy() {
-        stopForeground(Service.STOP_FOREGROUND_DETACH);
         super.onDestroy();
     }
 
@@ -116,7 +113,7 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
     public void setOnSendListener(MyInterface myInterface) {
         this.myInterface = myInterface;
     }
-
+   
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_CAPTURE_IMAGE) {
             if (resultCode != Activity.RESULT_OK) {
@@ -149,9 +146,8 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
                     mImageReader.getSurface(),
                     null,
                     null);
-
-            //MainActivity.printClientLog("takescreenshot ok");
             imagesend = true;
+            //MainActivity.printClientLog("takescreenshot ok");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -159,53 +155,43 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
 
     @Override
     public synchronized void onImageAvailable(final ImageReader reader) {
-                while (true) {
+        while (true) {
+            //MainActivity.printClientLog("Image thread on");
+            if (imagesend) {
+                imagesend = false;
+                //MainActivity.printClientLog("onImageAvailable");
+                image = reader.acquireLatestImage();
+                if(image == null)
+                    continue;
+                final Image.Plane[] planes = image.getPlanes();
+                final Buffer buffer = planes[0].getBuffer().rewind();
+                if (!getSizeok) {
+                    int pixelStride = planes[0].getPixelStride();
+                    int rowStride = planes[0].getRowStride();
+                    int rowPadding = rowStride - pixelStride * screenWidth;
+                    // create bitmap
+                    bitmap = Bitmap.createBitmap((screenWidth + rowPadding / pixelStride), screenHeight, Bitmap.Config.ARGB_8888);
+                    getSizeok = true;
+                }
+                bitmap.copyPixelsFromBuffer(buffer);
+                resize = Bitmap.createScaledBitmap(bitmap, 1280, 720, true);
+                //MainActivity.printClientLog("onsending start");
+                if (bitmap != null) {
+                    final byte[] arr = bitmapToByteArray(resize);
+                    //MainActivity.printClientLog("onsending ok");
+                    isok = true;
                     try {
-                        //MainActivity.printClientLog("Image thread on");
-                        if (imagesend) {
-                            imagesend = false;
-                            //MainActivity.printClientLog("onImageAvailable");
-                            Image image = reader.acquireLatestImage();
-                            if (image == null) {
-                                continue;
-                            }
-                            final Image.Plane[] planes = image.getPlanes();
-                            final Buffer buffer = planes[0].getBuffer().rewind();
-                            if (!getSizeok) {
-                                int pixelStride = planes[0].getPixelStride();
-                                int rowStride = planes[0].getRowStride();
-                                int rowPadding = rowStride - pixelStride * screenWidth;
-                                // create bitmap
-                                bitmap = Bitmap.createBitmap((screenWidth + rowPadding / pixelStride), screenHeight, Bitmap.Config.ARGB_8888);
-                                getSizeok = true;
-                            }
-                            bitmap.copyPixelsFromBuffer(buffer);
-                            resize = Bitmap.createScaledBitmap(bitmap, 720, 480, true);
-                            //MainActivity.printClientLog("onsending start");
-                            if (bitmap != null) {
-                                final byte[] arr = bitmapToByteArray(resize);
-                                //MainActivity.printClientLog("onsending ok");
-                                isok = true;
-                                myInterface.onSending(arr);
-                            } else {
-                                //MainActivity.printClientLog("onsending error");
-                            }
-                            image.close();
-                            mImageReader.getSurface().release();
-                        } else {
-                            Thread.yield();
-                        }
-                        // MainActivity.printClientLog("Image thread off");
+                        myInterface.onSending(arr);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    //MainActivity.printClientLog("onsending error");
                 }
-    }
-
-    public void clean(){
-        if (mImageReader != null) {
-            mImageReader.discardFreeBuffers();
-            mImageReader.close();
+                image.close();
+                mImageReader.getSurface().release();
+            }
+            // MainActivity.printClientLog("Image thread off");
         }
     }
 
@@ -216,11 +202,12 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
         screenDensity = metrics.densityDpi;
     }
 
-    public void startConnection() {
+    public void startConnection(String ip) {
         new Thread() {
             @Override
             synchronized public void run() {
                 try {
+                    defaultip = ip;
                     sock = new Socket(defaultip, defaultport);
                     MainActivity.printClientLog("소켓 연결함.");
                 } catch (Exception ex) {
@@ -274,6 +261,7 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
 
     public void stop(){
         ismirroring = false;
+        stopForeground(true);
         stopSelf();
     }
 
@@ -291,20 +279,20 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
                     isok = false;
                     String errorMessage = "";
                     try {
-                        Thread.sleep(80);
+                        Thread.sleep(100);
                         DataOutputStream outstream = new DataOutputStream(sock.getOutputStream());
                         outstream.write(intToByteArray(2));
-                        MainActivity.printClientLog("1");
+                        //MainActivity.printClientLog("1");
                         byte[] len = intToByteArray(data.length);
                         byte[] width = intToByteArray(screenWidth);
                         byte[] heigth = intToByteArray(screenHeight);
-                        MainActivity.printClientLog("2");
+                        //MainActivity.printClientLog("2");
                         outstream.write(len);
                         outstream.write(width);
                         outstream.write(heigth);
-                        MainActivity.printClientLog("3");
+                        //MainActivity.printClientLog("3");
                         outstream.write(data);
-                        MainActivity.printClientLog("4");
+                        //MainActivity.printClientLog("4");
                         outstream.flush();
                         MainActivity.printClientLog("데이터 전송함." + len);
                         issending = true;
@@ -326,7 +314,7 @@ public class TakeScreenshot extends Service implements ImageReader.OnImageAvaila
     }
     public byte[] bitmapToByteArray( Bitmap bitmap ) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream() ;
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream) ;
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream) ;
         byte[] byteArray = stream.toByteArray();
         return byteArray ;
     }

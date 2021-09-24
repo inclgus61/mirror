@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -29,13 +30,39 @@
             android:layout_marginTop="5dp"
             android:textOff="@string/connected"
             android:textOn="@string/unconnected"/>
+
         <ToggleButton
             android:id="@+id/camera"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:textOff="start_camera_display"
-            android:textOn="stop_camera_display"/>
+            android:textOff="@string/start_camera_display"
+            android:textOn="@string/stop_camera_display"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="49dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp">
+
+            <TextView
+                android:id="@+id/iptext"
+                android:layout_width="100dp"
+                android:layout_height="49dp"
+                android:text="IP"
+                android:textSize="30sp"
+                android:gravity="center" />
+
+            <EditText
+                android:id="@+id/ip"
+                android:layout_width="268dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:textSize="20sp"
+                android:hint="@string/ip"
+                android:inputType="none"
+                tools:ignore="LabelFor" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/textView"

@@ -11,4 +11,8 @@
     <string name="notification_title">notification_title</string>
     <string name="notification_message">notification_message</string>
     <string name="ticker_text">ticker_text</string>
+    <string name="ip">IP를 입력하세요.</string>
+    <string name="start_camera_display">start_camera_display</string>
+    <string name="stop_camera_display">stop_camera_display</string>
+    <string name="editable_true">editable = true</string>
 </resources>

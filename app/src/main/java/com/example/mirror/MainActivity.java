@@ -3,18 +3,16 @@ package com.example.mirror;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -28,15 +26,8 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.DataOutputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
-import static android.os.SystemClock.sleep;
 
 
 @SuppressLint("HandlerLeak")
@@ -50,11 +41,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ScreenRecording recording;
     private TakeScreenshot takeScreenshot;
     private Activity act;
+    public String defalutip;
     private static final int PERMISSIONS_MULTIPLE_REQUEST = 123;
 
     static TextView textView;
+    static TextView iptext;
+    static EditText editText;
     static Handler handler = new Handler();
 
+    @SuppressLint("WrongViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,13 +57,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         linearLayout = findViewById(R.id.button);
         textView = findViewById(R.id.textView);
+        iptext = findViewById(R.id.iptext);
+        editText = findViewById(R.id.ip);
         takeScreenshot = new TakeScreenshot();
         findViewById(R.id.screenshotDisplay).setOnClickListener(this);
         findViewById(R.id.serverconnect).setOnClickListener(this);
 
         Intent intent = new Intent(this, TakeScreenshot.class);
         startForegroundService(intent);
-        bindService(intent, conn, 0);
 
         checkPermission();
     }
@@ -133,7 +129,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.serverconnect:
                 if (((ToggleButton) view).isChecked()) {
-                    takeScreenshot.startConnection();
+                    defalutip = String.valueOf(editText.getText());
+                    takeScreenshot.startConnection(defalutip);
                 }
                 break;
         }
